@@ -1,0 +1,384 @@
+{
+  "version": 1,
+  "programs": [
+    {
+      "id": "ielts-academic",
+      "title": "IELTS Academic",
+      "goalDays": 365,
+      "levels": [
+        "B2",
+        "C1"
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "id": "academic-001-030",
+      "program": "ielts-academic",
+      "title": "IELTS Academic · Days 1–30",
+      "path": "journey/packs/academic-001-030.json",
+      "days": [
+        {
+          "day": 1,
+          "theme": "Who should get a school laptop?",
+          "titles": {
+            "reading": "Two Keys to Digital Access",
+            "listening": "Borrowing a Laptop for a Field Project",
+            "writing": "Who should get a school laptop?",
+            "speaking": "Learning with shared devices",
+            "vocabulary": "Vocabulary · Who should get a school laptop?",
+            "grammar": "Concessive clauses"
+          }
+        },
+        {
+          "day": 2,
+          "theme": "Library hours for shift workers",
+          "titles": {
+            "reading": "The Hours Nobody Can Request",
+            "listening": "A Sunday Library Visit for New Members",
+            "writing": "Library hours for shift workers",
+            "speaking": "Visiting public libraries",
+            "vocabulary": "Vocabulary · Library hours for shift workers",
+            "grammar": "Time clauses for future events"
+          }
+        },
+        {
+          "day": 3,
+          "theme": "Adult pronunciation feedback",
+          "titles": {
+            "reading": "When a Correction Arrives",
+            "listening": "Planning a Campus Conversation Trial",
+            "writing": "Adult pronunciation feedback",
+            "speaking": "Feedback you could act on",
+            "vocabulary": "Vocabulary · Adult pronunciation feedback",
+            "grammar": "Gerunds as subjects and complements"
+          }
+        },
+        {
+          "day": 4,
+          "theme": "Access to museum workshops",
+          "titles": {
+            "reading": "Three Ways to Meet a Museum Object",
+            "listening": "Preparing the Drawings Room",
+            "writing": "Access to museum workshops",
+            "speaking": "Who visits museums?",
+            "vocabulary": "Vocabulary · Access to museum workshops",
+            "grammar": "Percentage changes and comparisons"
+          }
+        },
+        {
+          "day": 5,
+          "theme": "Apprentice instrument makers",
+          "titles": {
+            "reading": "What Apprentices Learn From a Faulty Joint",
+            "listening": "Listening to an Instrument Before Adjusting It",
+            "writing": "Apprentice instrument makers",
+            "speaking": "Repairing things you use",
+            "vocabulary": "Vocabulary · Apprentice instrument makers",
+            "grammar": "Relative clauses identifying people and things"
+          }
+        },
+        {
+          "day": 6,
+          "theme": "Streets that hold rain",
+          "titles": {
+            "reading": "Why a rain garden may work best after the rain",
+            "listening": "Signing up for a rain-barrel collection",
+            "writing": "Streets that hold rain",
+            "speaking": "Shelter on a rainy walk",
+            "vocabulary": "Vocabulary · Streets that hold rain",
+            "grammar": "Comparing past figures"
+          }
+        },
+        {
+          "day": 7,
+          "theme": "Living coastlines",
+          "titles": {
+            "reading": "A beach bridge that moves the crowd",
+            "listening": "Briefing new rock-pool volunteers",
+            "writing": "Living coastlines",
+            "speaking": "A place with visitor rules",
+            "vocabulary": "Vocabulary · Living coastlines",
+            "grammar": "Concession, purpose and result"
+          }
+        },
+        {
+          "day": 8,
+          "theme": "Growing with less water",
+          "titles": {
+            "reading": "What one sensor cannot tell a market gardener",
+            "listening": "Two students plan a small irrigation trial",
+            "writing": "Growing with less water",
+            "speaking": "Decisions in food production",
+            "vocabulary": "Vocabulary · Growing with less water",
+            "grammar": "Active and passive descriptions of experiments"
+          }
+        },
+        {
+          "day": 9,
+          "theme": "Heat that can be used twice",
+          "titles": {
+            "reading": "An overlooked customer for recovered heat",
+            "listening": "A lecture on heat recovery at a swimming pool",
+            "writing": "Heat that can be used twice",
+            "speaking": "Pooling the cost of energy",
+            "vocabulary": "Vocabulary · Heat that can be used twice",
+            "grammar": "Conditions and exceptions"
+          }
+        },
+        {
+          "day": 10,
+          "theme": "Making room for rivers",
+          "titles": {
+            "reading": "A seasonal wetland is not a permanent lake",
+            "listening": "Consultation about a reservoir release plan",
+            "writing": "Making room for rivers",
+            "speaking": "An outdoor site that changes with the season",
+            "vocabulary": "Vocabulary · Making room for rivers",
+            "grammar": "Conditionals with real and hypothetical situations"
+          }
+        },
+        {
+          "day": 11,
+          "theme": "A street that works from the pavement",
+          "titles": {
+            "reading": "What the route diagram left out",
+            "listening": "Putting the campus crossing trial into practice",
+            "writing": "A street that works from the pavement",
+            "speaking": "Who gets to use the street?",
+            "vocabulary": "Vocabulary · A street that works from the pavement",
+            "grammar": "Formal conditions and passive forms"
+          }
+        },
+        {
+          "day": 12,
+          "theme": "A bus is only as useful as its connection",
+          "titles": {
+            "reading": "The six minutes passengers could not afford to lose",
+            "listening": "Calling about the Sunday tram replacement",
+            "writing": "A bus is only as useful as its connection",
+            "speaking": "A journey that nearly did not work",
+            "vocabulary": "Vocabulary · A bus is only as useful as its connection",
+            "grammar": "Past counterfactuals and time reference"
+          }
+        },
+        {
+          "day": 13,
+          "theme": "Designing shade people can actually use",
+          "titles": {
+            "reading": "Measuring the shade beside City Hall",
+            "listening": "Afternoon walking tours at Pine Quay",
+            "writing": "Designing shade people can actually use",
+            "speaking": "Spending time outdoors in town",
+            "vocabulary": "Vocabulary · Designing shade people can actually use",
+            "grammar": "Concession and noun-phrase comparison"
+          }
+        },
+        {
+          "day": 14,
+          "theme": "The gap between empty homes and available homes",
+          "titles": {
+            "reading": "When a dark window becomes a statistic",
+            "listening": "Revising the housing cooperative's maintenance survey",
+            "writing": "The gap between empty homes and available homes",
+            "speaking": "A home that needed one change",
+            "vocabulary": "Vocabulary · The gap between empty homes and available homes",
+            "grammar": "Impersonal reporting and questions inside clauses"
+          }
+        },
+        {
+          "day": 15,
+          "theme": "What to show when a landmark is rebuilt",
+          "titles": {
+            "reading": "An arch with two dates",
+            "listening": "Archive methods for moving a tiled mural",
+            "writing": "What to show when a landmark is rebuilt",
+            "speaking": "How much should restoration reveal?",
+            "vocabulary": "Vocabulary · What to show when a landmark is rebuilt",
+            "grammar": "Participle clauses and identifying past certainty"
+          }
+        },
+        {
+          "day": 16,
+          "theme": "Lighting and exhibition design",
+          "titles": {
+            "reading": "A display that lights up when someone stops",
+            "listening": "Arranging a quiet recording session",
+            "writing": "Lighting and exhibition design",
+            "speaking": "An object in a display",
+            "vocabulary": "Vocabulary · Lighting and exhibition design",
+            "grammar": "Comparison and contrast"
+          }
+        },
+        {
+          "day": 17,
+          "theme": "Comparing independent records",
+          "titles": {
+            "reading": "When a photograph carries the wrong time",
+            "listening": "Choosing a method for the campus movement project",
+            "writing": "Comparing independent records",
+            "speaking": "How you keep records",
+            "vocabulary": "Vocabulary · Comparing independent records",
+            "grammar": "Past perfect and time order"
+          }
+        },
+        {
+          "day": 18,
+          "theme": "Designing for repair",
+          "titles": {
+            "reading": "Why the heading on a repair tag mattered",
+            "listening": "How to use the community tool library",
+            "writing": "Designing for repair",
+            "speaking": "Choosing between repair and replacement",
+            "vocabulary": "Vocabulary · Designing for repair",
+            "grammar": "Relative clauses with equipment and people"
+          }
+        },
+        {
+          "day": 19,
+          "theme": "Community astronomy and observation",
+          "titles": {
+            "reading": "A shared night sky and four different skylines",
+            "listening": "The scale model and its hidden assumptions",
+            "writing": "Community astronomy and observation",
+            "speaking": "A model that helped you understand an idea",
+            "vocabulary": "Vocabulary · Community astronomy and observation",
+            "grammar": "Quantifiers and reference sets"
+          }
+        },
+        {
+          "day": 20,
+          "theme": "Explaining scientific uncertainty",
+          "titles": {
+            "reading": "The claim that changed when the unit changed",
+            "listening": "Preparing a briefing about a travel trial",
+            "writing": "Explaining scientific uncertainty",
+            "speaking": "When a result becomes a headline",
+            "vocabulary": "Vocabulary · Explaining scientific uncertainty",
+            "grammar": "Reporting evidence with suitable constructions"
+          }
+        },
+        {
+          "day": 21,
+          "theme": "Flexible shifts and shared coverage",
+          "titles": {
+            "reading": "When the clock became negotiable",
+            "listening": "Confirming a course timetable",
+            "writing": "Flexible shifts and shared coverage",
+            "speaking": "Accommodating different schedules",
+            "vocabulary": "Vocabulary · Flexible shifts and shared coverage",
+            "grammar": "Concession and contrast"
+          }
+        },
+        {
+          "day": 22,
+          "theme": "Corrections in a local newsroom",
+          "titles": {
+            "reading": "A correction that readers could find",
+            "listening": "Planning a campus radio interview",
+            "writing": "Corrections in a local newsroom",
+            "speaking": "A piece of information you checked",
+            "vocabulary": "Vocabulary · Corrections in a local newsroom",
+            "grammar": "Reporting what was said or checked"
+          }
+        },
+        {
+          "day": 23,
+          "theme": "Income, timing and household budgeting",
+          "titles": {
+            "reading": "Why timing belongs in the budget",
+            "listening": "A community budgeting session",
+            "writing": "Income, timing and household budgeting",
+            "speaking": "Making decisions with uncertain income",
+            "vocabulary": "Vocabulary · Income, timing and household budgeting",
+            "grammar": "Real and imagined conditions"
+          }
+        },
+        {
+          "day": 24,
+          "theme": "Sharing professional equipment",
+          "titles": {
+            "reading": "A shared oven with separate clocks",
+            "listening": "A research seminar on equipment loans",
+            "writing": "Sharing professional equipment",
+            "speaking": "Equipment you shared for a project",
+            "vocabulary": "Vocabulary · Sharing professional equipment",
+            "grammar": "Describing changing figures"
+          }
+        },
+        {
+          "day": 25,
+          "theme": "What customer ratings can and cannot tell us",
+          "titles": {
+            "reading": "Beyond the average star rating",
+            "listening": "Sampling visitors at a market",
+            "writing": "What customer ratings can and cannot tell us",
+            "speaking": "Choosing where to shop",
+            "vocabulary": "Vocabulary · What customer ratings can and cannot tell us",
+            "grammar": "Controlling generalisations"
+          }
+        },
+        {
+          "day": 26,
+          "theme": "Who gets remembered?",
+          "titles": {
+            "reading": "The Archive of Unremarkable Work",
+            "listening": "Planning an oral-history trail",
+            "writing": "Who gets remembered?",
+            "speaking": "Whose account belongs in a museum?",
+            "vocabulary": "Vocabulary · Who gets remembered?",
+            "grammar": "Contrast with while"
+          }
+        },
+        {
+          "day": 27,
+          "theme": "A festival that speaks to more people",
+          "titles": {
+            "reading": "One festival, several ways in",
+            "listening": "Booking an interpreted pottery workshop",
+            "writing": "A festival that speaks to more people",
+            "speaking": "An occasion that needed interpretation",
+            "vocabulary": "Vocabulary · A festival that speaks to more people",
+            "grammar": "Purpose and result"
+          }
+        },
+        {
+          "day": 28,
+          "theme": "Giving objects a documented home",
+          "titles": {
+            "reading": "Cataloguing the case of the clay seals",
+            "listening": "A short talk about tracking objects in storage",
+            "writing": "Giving objects a documented home",
+            "speaking": "The future of historical artefacts",
+            "vocabulary": "Vocabulary · Giving objects a documented home",
+            "grammar": "Reduced relative clauses"
+          }
+        },
+        {
+          "day": 29,
+          "theme": "Households across generations",
+          "titles": {
+            "reading": "One roof, two front doors",
+            "listening": "Designing a housing follow-up study",
+            "writing": "Households across generations",
+            "speaking": "Living with relatives",
+            "vocabulary": "Vocabulary · Households across generations",
+            "grammar": "Changes in figures"
+          }
+        },
+        {
+          "day": 30,
+          "theme": "The time cost of caring",
+          "titles": {
+            "reading": "The value of a place that stays empty",
+            "listening": "A call about covering an evening shift",
+            "writing": "The time cost of caring",
+            "speaking": "Supporting unpaid carers",
+            "vocabulary": "Vocabulary · The time cost of caring",
+            "grammar": "Modal verbs for proposals"
+          }
+        }
+      ]
+    }
+  ]
+}
