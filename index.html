@@ -17,12 +17,27 @@
     <div class="shell top">
       <a class="brand" href="#home"><img src="icon.svg" alt="" width="40" height="40"><span>Little Steps<span class="brand-break">, </span><br>Big Bands<span class="brand-period">.</span></span></a>
       <nav id="primary" class="nav" aria-label="Main navigation"></nav>
+      <button type="button" id="search-toggle" class="btn secondary search-toggle" aria-label="Search the website" aria-keyshortcuts="Control+K Meta+K">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"></circle><path d="m15 15 5 5"></path></svg>
+        <span>Search</span><kbd>Ctrl K</kbd>
+      </button>
       <div class="profile" title="Trang’s study space" aria-label="Trang’s study space">T</div>
     </div>
   </header>
   <main id="main" class="shell main" tabindex="-1"></main>
   <footer class="shell footer"><span>Little Steps, Big Bands</span><span>Independent IELTS Academic practice · <a href="https://ielts.org/take-a-test/test-types/ielts-academic-test/" target="_blank" rel="noopener">Official test format</a></span></footer>
   <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+  <dialog id="global-search" aria-labelledby="global-search-title">
+    <div class="search-row-head"><h2 id="global-search-title">Search Little Steps</h2><button type="button" class="btn secondary small" data-search-act="close">Close</button></div>
+    <form class="global-search-form" role="search">
+      <label class="field">Search words and lessons<input type="search" name="query" autocomplete="off" spellcheck="false" maxlength="128" placeholder="e.g. mitigate, solar power, Task 1"></label>
+      <button class="btn" type="submit">Search</button>
+    </form>
+    <details class="search-filter-panel"><summary>Advanced filters</summary><div id="search-facets"></div>
+      <button class="btn flat small" type="button" data-search-act="reset">Reset filters</button></details>
+    <div id="global-results"></div>
+  </dialog>
+  <button type="button" id="selection-lookup" class="btn" hidden>Look up selection</button>
   <div id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

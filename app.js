@@ -5,6 +5,10 @@ import {researchRows} from './research.js';
 import {defaultJourneyProgram, journeyCatalog, journeyEntries, journeyLessonId, journeyProgramPattern,
   journeySkills, loadJourneyDay, makeJourneyLesson, parseJourneyLesson} from './journey.js';
 
+import {setupSmartSearch} from './search-ui.js';
+import {makeSearchCorpus} from './search-corpus.js';
+import {normalizeSearch} from './smart-search.js';
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const main = $('#main');
 const nav = $('#primary');
@@ -14,7 +18,7 @@ const storageKey = 'little-steps-study-v1';
 const historyLimit = 3500;
 const skillName = key => (skills[key] ?? journeySkills[key])?.name ?? 'Practice';
 const defaultLevels = Object.fromEntries(Object.keys(skills).map(skill => [skill, 'B2']));
-const emptyState = () => ({levels:{...defaultLevels}, drafts:{}, history:[], saved:[], learned:[], notebook:[], reviewDates:{}, journeyLevels:{}, plan:'short'});
+const emptyState = () => ({levels:{...defaultLevels}, drafts:{}, history:[], saved:[], learned:[], notebook:[], reviewDates:{}, lexicon:{}, bookmarks:[], journeyLevels:{}, plan:'short'});
 const lessonById = new Map([...lessons,...assessments].map(lesson => [lesson.id,lesson]));
 const wordByName = new Map(words.map(word => [word.word,word]));
 const pageState = {skill:'all', level:'all', length:'all', search:'', vocabLevel:'B2', vocabSearch:'', vocabView:'all', reviewIndex:0, assessmentLevel:'B2'};
@@ -72,12 +76,19 @@ function normalizeState(raw) {
     total:Number.isFinite(event.total) ? event.total : null,
     misses:Array.isArray(event.misses) ? event.misses.filter(id => /^\d{1,2}-\d{1,2}$/.test(id)).slice(0,40) : []
   }));
+  for (const [key,entry] of Object.entries(raw.lexicon ?? {}).slice(0,1500)) {
+    if (!isRecord(entry) || !validWord(key) || entry.word!==key) continue;
+    const clean=Object.fromEntries(['word','pos','level','plain','definition','example','collocation','ipa']
+      .map(field=>[field,typeof entry[field]==='string'?entry[field].slice(0,1500):'']));
+    if (clean.plain) result.lexicon[key]=clean;
+  }
+  if(Array.isArray(raw.bookmarks)) result.bookmarks=[...new Set(raw.bookmarks.filter(key=>typeof key==='string'&&validDraftKey(key)))].slice(0,3000);
   for (const name of ['saved','learned']) {
-    if (Array.isArray(raw[name])) result[name] = [...new Set(raw[name].filter(word => wordByName.has(word)))];
+    if (Array.isArray(raw[name])) result[name] = [...new Set(raw[name].filter(word => wordByName.has(word) || Object.hasOwn(result.lexicon,word)))];
   }
   result.plan = lengths.some(x=>x.id===raw.plan) ? raw.plan : 'short';
   for (const [name,review] of Object.entries(raw.reviewDates ?? {})) {
-    if (wordByName.has(name) && Number.isFinite(review?.due) && Number.isInteger(review?.step)) {
+    if ((wordByName.has(name)||Object.hasOwn(result.lexicon,name)) && Number.isFinite(review?.due) && Number.isInteger(review?.step)) {
       result.reviewDates[name] = {due:review.due,step:clamp(review.step,0,3)};
     }
   }
@@ -89,6 +100,9 @@ function normalizeState(raw) {
 function makeDraft() {
   return {part:0,mode:'supported',submitted:false,elapsed:0,started:0,answers:{},texts:{},types:{},notes:{}};
 }
+const validWord = word=>typeof word==='string'&&word.length<=85&&/^[\p{L}][\p{L}\p{N} '’.-]*$/u.test(word)
+  && !['constructor','prototype'].includes(word);
+const lexicalWord = word=>wordByName.get(word)??(Object.hasOwn(state.lexicon,word)?state.lexicon[word]:undefined);
 let state = emptyState();
 try {state = normalizeState(JSON.parse(localStorage.getItem(storageKey)));} catch {}
 let active = null;
@@ -137,6 +151,8 @@ function getRoute() {
   const segments = location.hash.slice(1).split('/');
   const [page = '', id] = segments;
   if (page === 'lesson' || page === 'test') return {page,id};
+  if(page==='academy' && id) return {page,skill:id,type:Number(segments[2])};
+  if(page==='progress') return {page,target:id};
   if (page === 'journey') return {page,program:id || defaultJourneyProgram,
     day:segments[2] ? Number(segments[2]) : null,level:segments[3]};
   if (page === 'practice') return {page,skill:skills[id] ? id : null,level:levels.includes(segments[2]) ? segments[2] : null};
@@ -261,7 +277,8 @@ function presentLesson() {
   const notice = isTest ? (lesson.objective ? 'Complete the questions within the time limit. Answers and explanations appear after you submit.' : 'Complete each task before the timer ends. Use the self-review materials after submitting.') : lesson.instruction[0];
   main.innerHTML = `${previous}<div class="lesson-head">${heading(lesson.title,notice,name + ' · ' + lesson.level + ' · ' + context)}${!isTest || started ? timer : ''}</div>
     <div class="session-controls">${stage}
-    <div class="actions">${!isTest || completed ? button('Print lesson','data-act="print"','secondary small') : ''}
+    <div class="actions">${button(state.bookmarks.includes(active.key)?'Unsave exercise':'Save exercise','data-act="bookmark-lesson"','secondary small')}
+    ${!isTest || completed ? button('Print lesson','data-act="print"','secondary small') : ''}
     ${!isTest ? link('Study methods','#academy','flat small') : ''}
     ${completed && lesson.journey ? nextJourneyActivity(lesson) : completed && !isTest ? button('Next unseen lesson','data-act="next-unseen"','secondary small') : ''}
     ${completed ? button('Try again','data-act="confirm-retry"','secondary small') : ''}</div></div>
@@ -435,6 +452,9 @@ function speakingPart(task) {
 }
 function vocabulary() {
   return heading('Vocabulary','Look up a word in English, save it, and come back for a short recall practice.') + `
+  <div class="actions library-actions">${button('Master Dictionary','data-act="dictionary-search"','secondary')}
+    ${button('Vocabulary Academy','data-act="vocab-academy-search"','secondary')}
+    ${button('My Vocabulary','data-act="my-vocabulary"','secondary')}</div>
   <div class="card filters">
     ${select('vocabLevel','Word level',[['all','All levels'],...levels.map(l=>[l,l])],pageState.vocabLevel)}
     ${select('vocabView','Word list',[['all','Dictionary'],['saved','Saved words'],['review','Recall practice']],pageState.vocabView)}
@@ -445,18 +465,20 @@ function wordDefinition(word, inside = false) {
   const saved = state.saved.includes(word.word);
   const known = state.learned.includes(word.word);
   return `<div class="meta"><span class="tag">${word.level}</span><span>${word.pos}</span>${known ? '<span class="tag gold">Learnt</span>' : ''}</div>
-  <p>${esc(word.plain)}</p><p class="example"><em>${esc(word.example)}</em><br><span class="smalltext muted">${esc(word.collocation)}</span></p>
+  <p>${esc(word.plain)}</p>${word.ipa?'<p class="smalltext muted">US IPA /'+esc(word.ipa)+'/</p>':''}
+  ${word.example||word.collocation?`<p class="example"><em>${esc(word.example)}</em><br><span class="smalltext muted">${esc(word.collocation)}</span></p>`:''}
   <details><summary>More precise definition</summary><p>${esc(word.definition)}</p></details>
   <div class="actions" style="margin-top:10px">
-  ${button(saved ? 'Remove saved word' : 'Save word','data-act="save-word" data-word="'+word.word+'"','secondary small')}
-  ${button(known ? 'Mark for more review' : 'Mark as learnt','data-act="learn-word" data-word="'+word.word+'"','secondary small')}
-  ${button('Hear word','data-act="say-word" data-word="'+word.word+'"','flat small')}
-  ${inside ? '' : button('Open entry','data-act="dictionary" data-word="'+word.word+'"','flat small')}</div>`;
+  ${button(saved ? 'Remove saved word' : 'Save word','data-act="save-word" data-word="'+esc(word.word)+'"','secondary small')}
+  ${button(known ? 'Mark for more review' : 'Mark as learnt','data-act="learn-word" data-word="'+esc(word.word)+'"','secondary small')}
+  ${button('Hear word','data-act="say-word" data-word="'+esc(word.word)+'"','flat small')}
+  ${inside ? '' : button('Open entry','data-act="dictionary" data-word="'+esc(word.word)+'"','flat small')}</div>`;
 }
 function wordResults() {
   const {vocabLevel,vocabView,vocabSearch} = pageState;
   const query = vocabSearch.trim().toLowerCase();
-  const filtered = words.filter(word =>
+  const studyWords=vocabView==='all'?words:[...words,...Object.values(state.lexicon).filter(entry=>!wordByName.has(entry.word))];
+  const filtered = studyWords.filter(word =>
     (vocabLevel === 'all' || word.level === vocabLevel) &&
     (vocabView === 'all' || state.saved.includes(word.word)) &&
     (vocabView !== 'review' || !state.reviewDates[word.word] || state.reviewDates[word.word].due <= Date.now()) &&
@@ -469,8 +491,8 @@ function wordResults() {
     return `<article class="card word-entry"><p class="eyebrow">Word ${index+1} of ${filtered.length}</p>
       <h3>${esc(word.word)}</h3><p>Say the meaning in your own words, then check the definition.</p>
       <details><summary>Reveal definition</summary>${wordDefinition(word,true)}</details>
-      <div class="actions" style="margin-top:10px">${button('Review tomorrow','data-act="schedule-word" data-word="'+word.word+'" data-mode="soon"','secondary small')}
-      ${button('Remembered','data-act="schedule-word" data-word="'+word.word+'" data-mode="later"','secondary small')}
+      <div class="actions" style="margin-top:10px">${button('Review tomorrow','data-act="schedule-word" data-word="'+esc(word.word)+'" data-mode="soon"','secondary small')}
+      ${button('Remembered','data-act="schedule-word" data-word="'+esc(word.word)+'" data-mode="later"','secondary small')}
       ${button('Next word','data-act="review-next"','flat small')}</div></article>`;
   }
   return `<p class="muted smalltext" role="status">${filtered.length} ${filtered.length===1 ? 'word' : 'words'}</p>
@@ -510,7 +532,7 @@ function progress() {
     <div class="grid four">${Object.keys(skills).map(skill=>`<div class="card">${select('pref-'+skill,skills[skill].name,levels.map(level=>[level,level]),state.levels[skill])}</div>`).join('')}</div>
     <div class="section-head"><h2>Recent sessions</h2></div>
     <section class="card">${state.history.length ? `<ul class="history">${state.history.slice(0,15).map(historyItem).join('')}</ul>` : '<p>Completed practice and assessments will appear here.</p>'}</section>
-    <div class="section-head"><h2>Review missed answers</h2></div>
+    <div class="section-head" id="mistakes" tabindex="-1"><h2>Review missed answers</h2></div>
     <section class="card">${corrections.length ? corrections.map(({event,id})=>{
       const item = historyLesson(event);
       const [i,j] = id.split('-').map(Number);
@@ -519,6 +541,9 @@ function progress() {
       <p class="smalltext muted">${skillName(item.skill)} · ${esc(item.parts[i].title)} · ${item.level}</p></details>` : '';
     }).join('') : '<p>Missed Reading and Listening answers will appear here after you submit.</p>'}</section>
     ${notebookHTML()}
+    <div class="section-head" id="saved-exercises" tabindex="-1"><h2>Saved exercises</h2></div>
+    <section class="card">${state.bookmarks.length?`<ul class="history">${state.bookmarks.map(key=>`<li><a href="${historyHref(key)}">${esc(historyLesson({key})?.title??key)}</a>
+    ${button('Remove','data-act="remove-bookmark" data-key="'+esc(key)+'"','secondary small')}</li>`).join('')}</ul>`:'<p>Save an exercise from its lesson page to find it here.</p>'}</section>
     <div class="section-head"><h2>Study data</h2></div>
     <section class="card"><p>Progress, answers and drafts stay in this browser. Export them to keep a backup or move to another device. Download Speaking recordings separately from each lesson.</p>
     <div class="actions">${button('Export study data','data-act="export"','secondary')}
@@ -534,7 +559,7 @@ function closeDialog() {
   delete modal.dataset.word;
 }
 function showWord(name) {
-  const word = wordByName.get(name);
+  const word = lexicalWord(name);
   if (!word) return;
   modal.dataset.word = name;
   showDialog(word.word,wordDefinition(word,true));
@@ -759,6 +784,8 @@ async function renderRoute(initial = false) {
   active = null;
   closeDialog();
   const route = getRoute();
+  const match = pendingSearchResult;
+  pendingSearchResult=undefined;
   nav.innerHTML = navHTML(route.page);
   const journeySession = route.page==='lesson' ? parseJourneyLesson(route.id) : null;
   let journeyPageData;
@@ -785,7 +812,7 @@ async function renderRoute(initial = false) {
       return;
     }
   }
-  if (route.page==='progress' && state.history.some(event=>parseJourneyLesson(event.key))) {
+  if (route.page==='progress' && [...state.history.map(event=>event.key),...state.bookmarks].some(parseJourneyLesson)) {
     await loadJourneyHistory();
     if (sequence!==routeSequence) return;
   }
@@ -797,6 +824,9 @@ async function renderRoute(initial = false) {
       ...makeDraft(),mode:item.journey && item.level.startsWith('C') ? 'independent' : 'supported'
     };
     active = {lesson:item,draft,key,isTest};
+    if(match?.href===location.hash && Number.isInteger(match.part) && (!isTest||draft.started||draft.submitted)) {
+      draft.part=clamp(match.part,0,item.parts.length-1);
+    }
     presentLesson();
     runInterval = setInterval(renderTimer,350);
   } else if (route.page === 'journey') {
@@ -812,7 +842,13 @@ async function renderRoute(initial = false) {
     }
     main.innerHTML = practice();
   } else if (route.page === 'vocabulary') main.innerHTML = vocabulary();
-  else if (route.page === 'academy') main.innerHTML = academyPage();
+  else if (route.page === 'academy') {
+    if(Object.hasOwn(academy,route.skill)&&Number.isInteger(route.type)&&academy[route.skill][route.type]){
+      academySkill=route.skill;
+      academyType=route.type;
+    }
+    main.innerHTML=academyPage();
+  }
   else if (route.page === 'research') main.innerHTML = researchPage();
   else if (route.page === 'progress') main.innerHTML = progress();
   else if (route.page === 'assessment') main.innerHTML = assessment();
@@ -824,6 +860,9 @@ async function renderRoute(initial = false) {
     main.focus({preventScroll:true});
     window.scrollTo(0,0);
   }
+  const target=route.page==='progress'&&route.target ? document.getElementById(route.target==='notes'?'notebook':route.target)
+    : match?.href===location.hash && Number.isInteger(match.question) ? main.querySelectorAll('.question-set')[match.question] : null;
+  if(target){target.setAttribute('tabindex','-1');target.focus({preventScroll:true});target.scrollIntoView({block:'center'});}
 }
 function refreshField(field,value) {
   if (field==='journey-program' && journeyProgramPattern.test(value)) {
@@ -926,6 +965,26 @@ document.addEventListener('click',event=>{
       $('[data-field="skill"]').focus();
       break;
     case 'dictionary': showWord(word); break;
+    case 'dictionary-search': smartSearch?.open('','dictionary',buttonNode); break;
+    case 'vocab-academy-search': smartSearch?.open('','vocabulary',buttonNode); break;
+    case 'my-vocabulary':
+      pageState.vocabView='saved';pageState.vocabLevel='all';pageState.vocabSearch='';
+      main.innerHTML=vocabulary();
+      $('[data-field="vocabView"]')?.focus();
+      break;
+    case 'bookmark-lesson':
+      if(active){
+        const key=active.key;
+        const exists=state.bookmarks.includes(key);
+        state.bookmarks=exists?state.bookmarks.filter(item=>item!==key):[...state.bookmarks,key];
+        save();buttonNode.textContent=exists?'Save exercise':'Unsave exercise';
+        toast(exists?'Exercise removed.':'Exercise saved.');
+      }
+      break;
+    case 'remove-bookmark':
+      state.bookmarks=state.bookmarks.filter(key=>key!==buttonNode.dataset.key);
+      save();main.innerHTML=progress();$('#saved-exercises')?.focus();
+      break;
     case 'shuffle': shuffleLesson(); break;
     case 'next-unseen': {
       const present = active.lesson;
@@ -938,7 +997,7 @@ document.addEventListener('click',event=>{
       if (active) printLesson();
       break;
     case 'say-word':
-      if (wordByName.has(word) && 'speechSynthesis' in window) {
+      if (lexicalWord(word) && 'speechSynthesis' in window) {
         const phrase = new SpeechSynthesisUtterance(word);
         phrase.lang = 'en-GB';
         speechSynthesis.cancel();
@@ -946,7 +1005,7 @@ document.addEventListener('click',event=>{
       } else toast('Pronunciation playback is unavailable in this browser.');
       break;
     case 'schedule-word':
-      if (wordByName.has(word)) {
+      if (lexicalWord(word)) {
         const step = mode === 'soon' ? 0 : Math.min(3,(state.reviewDates[word]?.step ?? -1)+1);
         const days = mode === 'soon' ? 1 : [2,4,8,16][step];
         state.reviewDates[word] = {step,due:Date.now()+days*86400000};
@@ -958,7 +1017,7 @@ document.addEventListener('click',event=>{
     case 'close-dialog': closeDialog(); break;
     case 'save-word':
     case 'learn-word': {
-      if (!wordByName.has(word)) return;
+      if (!lexicalWord(word)) return;
       const key = act==='save-word' ? 'saved' : 'learned';
       const adding = !state[key].includes(word);
       state[key] = adding ? [...state[key],word] : state[key].filter(item=>item!==word);
@@ -1122,13 +1181,13 @@ function uniqueCount(skill) {
 }
 const noteKinds = {mistake:'Mistake',grammar:'Grammar',vocabulary:'Vocabulary',strategy:'Strategy'};
 function notebookHTML() {
-  return `<div class="section-head"><h2>Mistake notebook</h2></div>
+  return `<div class="section-head" id="notebook" tabindex="-1"><h2>Mistake notebook</h2></div>
   <section class="card"><div class="grid two">
   <div class="stack" style="margin-top:0">${select('note-kind','Note type',Object.entries(noteKinds),'mistake')}
     <label class="field">Title<input id="note-title" type="text" maxlength="100" placeholder="e.g. Missing a word that reverses a claim"></label>
     <label class="field">Note<textarea id="note-text" rows="3" maxlength="1800" style="min-height:90px" placeholder="Write what went wrong and what you will check next time."></textarea></label>
     ${button('Save note','data-act="save-note"','secondary')}</div>
-  <div>${state.notebook.length ? state.notebook.slice(0,12).map(note=>`<article class="note ${note.kind}"><p class="fine muted">${noteKinds[note.kind]}</p><h3>${esc(note.title)}</h3><p class="prewrap">${esc(note.text)}</p></article>`).join('') : '<p class="muted">Your study notes will appear here.</p>'}</div>
+  <div>${state.notebook.length ? state.notebook.map((note,i)=>`<article class="note ${note.kind}"><p class="fine muted">${noteKinds[note.kind]}</p><h3>${esc(note.title)}</h3><p class="prewrap">${esc(note.text)}</p></article>`).join('') : '<p class="muted">Your study notes will appear here.</p>'}</div>
   </div></section>`;
 }
 function addNote() {
@@ -1225,7 +1284,8 @@ const journeyCompleted = () => new Set([
 async function loadJourneyHistory() {
   try {
     const catalog = await journeyCatalog();
-    const keys = [...new Set(state.history.filter(event=>parseJourneyLesson(event.key)).slice(0,30).map(event=>event.key))];
+    const keys = [...new Set([...state.history.filter(event=>parseJourneyLesson(event.key)).slice(0,30).map(event=>event.key),
+      ...state.bookmarks.filter(parseJourneyLesson)])];
     await Promise.allSettled(keys.map(async key=>{
       if (lessonById.has(key)) return;
       const {program,day,skill,level} = parseJourneyLesson(key);
@@ -1356,4 +1416,76 @@ function journeyVocabulary(part,draft) {
     <details ${draft.submitted ? 'open' : ''}><summary>Open vocabulary entries</summary>${vocabularyTable(part.vocabulary)}</details>`;
 }
 
+
+let pendingSearchResult;
+function searchKeys(doc) {
+  if(!doc.journey)return doc.key?[doc.key]:[];
+  return doc.journey.levels.map(level=>journeyLessonId(doc.journey.program,doc.journey.day,doc.skill,level));
+}
+function personalSearchDocs(library) {
+  const docs=state.notebook.map((note,i)=>({category:note.kind==='mistake'?'mistakes':'notes',title:note.title,
+    body:note.text,type:note.kind,href:'#progress/notebook-note-'+i,status:'Saved'}));
+  for(const word of state.saved){
+    const entry=lexicalWord(word);
+    if(entry)docs.push({category:'myWords',title:word,body:[entry.definition,entry.example,entry.collocation].join(' '),
+      word,entry,skill:'vocabulary',level:entry.level,pos:entry.pos,type:'Word entry',status:'Saved'});
+  }
+  const savedKeys=new Set(state.bookmarks), completed=new Map();
+  for(const event of state.history)if(!completed.has(event.key))completed.set(event.key,event);
+  const seenSaved=new Set();
+  for(const doc of library){
+    const keys=searchKeys(doc);
+    if(doc.category==='questions'){
+      const event=keys.map(key=>completed.get(key)).find(item=>item?.misses.includes(doc.part+'-'+doc.question));
+      if(event)docs.push({...doc,category:'mistakes',status:'Completed',href:historyHref(event.key),journey:undefined});
+    }else{
+      const key=keys.find(key=>savedKeys.has(key)&&!seenSaved.has(key));
+      if(key){seenSaved.add(key);docs.push({...doc,category:'saved',status:'Saved',href:historyHref(key),key,journey:undefined});}
+    }
+  }
+  return docs;
+}
+function searchLearningStatus() {
+  const saved=new Set(state.bookmarks);
+  const complete=new Set(state.history.map(item=>item.key));
+  const savedWords=new Set(state.saved);
+  return doc=>{
+  if(doc.word)return savedWords.has(doc.word)?'Saved':'New';
+  const keys=searchKeys(doc);
+  const statuses=new Set();
+  if(keys.some(key=>saved.has(key)))statuses.add('Saved');
+  if(keys.some(key=>state.drafts[key]?.submitted || complete.has(key)))statuses.add('Completed');
+  if(keys.some(key=>{
+    const draft=state.drafts[key];
+    return draft&&!draft.submitted&&(draft.started||draft.elapsed||[draft.answers,draft.texts,draft.notes].some(x=>Object.values(x).some(Boolean)));
+  }))statuses.add('In progress');
+  return [...statuses].join('|')||'New';
+  };
+}
+function openSearchResult(doc,level) {
+  if(!doc.href)return;
+  if(doc.journey){
+    const {program,day,levels:available}=doc.journey;
+    const preferred=[level,state.journeyLevels[program],state.levels.reading,available[0]].find(value=>available.includes(value));
+    doc={...doc,href:'#lesson/'+journeyLessonId(program,day,doc.skill,preferred)};
+  }
+  pendingSearchResult=doc;
+  if(location.hash===doc.href)renderRoute();else location.hash=doc.href;
+}
+function saveSearchWord(entry) {
+  const word=entry.word;
+  if(!validWord(word))return;
+  const exists=state.saved.includes(word);
+  if(!exists&&!wordByName.has(word))state.lexicon[word]=entry;
+  state.saved=exists?state.saved.filter(item=>item!==word):[...state.saved,word];
+  save();
+  if($('#word-results'))$('#word-results').innerHTML=wordResults();
+  toast(exists?'Removed from My Vocabulary.':'Saved to My Vocabulary.');
+}
+const smartSearch=setupSmartSearch({
+  corpus:()=>makeSearchCorpus(lessons,assessments,academy,words),
+  personal:personalSearchDocs,statusOf:searchLearningStatus,
+  curated:word=>lexicalWord(normalizeSearch(word)),saveWord:saveSearchWord,
+  isSaved:word=>state.saved.includes(word),openResult:openSearchResult,announce:toast
+});
 renderRoute(true);
